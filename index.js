@@ -28,24 +28,26 @@ app.get("/",(req,res)=>{
 
 // Image Storage Engine
 
+// Image Storage Engine
 const storage = multer.diskStorage({
-    destination : './upload/images',
-    filename :(req,file,cb) => {
-        return cb(null, `${file.filename}_${Date.now()}${path.extname(file.originalname)}`)
+    destination: path.join(__dirname, 'upload', 'images'), // Set the destination path outside the src folder
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}${path.extname(file.originalname)}`);
     }
-})
+});
 
-const upload = multer({storage : storage })
+const upload = multer({ storage: storage });
 
-//Creating Upload Endpoin for image
+//Creating Upload Endpoint for image
+app.use('/images', express.static(path.join(__dirname, 'upload', 'images')));
 
-app.use('/images',express.static('upload/images'))
-app.post("/upload" , upload.single("product"), (req,res)=>{
+// Update the upload endpoint to return the full image URL
+app.post("/upload", upload.single("product"), (req, res) => {
     res.json({
-        success : 1 ,
-        image_url : `http://localhost:${port}/images/${req.file.filename}`
-})
-})
+        success: 1,
+        image_url: `http://${req.hostname}:${port}/images/${req.file.filename}` // Dynamically generate image URL
+    });
+});
 
 //Schema for Creating Produts
 const Product = mongoose.model("Products", {
@@ -71,7 +73,7 @@ const Product = mongoose.model("Products", {
     },
     old_price:{
         type : Number,
-        required : true,
+        required : false,
     },
     date:{
         type : Date,
@@ -80,6 +82,10 @@ const Product = mongoose.model("Products", {
     avilable:{
         type : Boolean,
         default : true,
+    },
+    description : {
+        type : String,
+        required : true,
     }
 })
 
@@ -103,6 +109,7 @@ app.post("/addproduct", async(req,res)=>{
         new_price : req.body.new_price,
         old_price : req.body.old_price,
         avilable : req.body.Boolean,
+        description : req.body.description
     })
     console.log(produt);
     await produt.save();
@@ -219,11 +226,11 @@ app.get('/newcollection', async (req, res) => {
 
 
 // creating endpoint for popular in women section
-app.get("/popularinwomen" , async (req,res)=>{
-    let products = await Product.find({category : 'women'})
-    let popular_in_women = products.slice(0,4);
-    console.log("Popular in women fetched")
-    res.send(popular_in_women)
+app.get("/popularinlaptop" , async (req,res)=>{
+    let products = await Product.find({category : 'laptop'})
+    let popular_in_laptop = products.slice(0,4);
+    console.log("Popular in laptop fetched")
+    res.send(popular_in_laptop)
 })  
 
 
